@@ -1,6 +1,6 @@
 # Selection Workflow Project
 #I actually need to be updating this acount often
-#I am push some of my work from my SSH to here, I would try and properly organize in later time though
+#I push some of my work from my SSH to here, I would try and properly organize in later time though
 #I also dont want to lose some of the files
 
 ## Script Categories
