@@ -1,0 +1,62 @@
+# Large data files
+*.fasta
+*.fa
+*.fastq
+*.fq
+*.bam
+*.sam
+*.vcf
+*.vcf.gz
+
+# Analysis outputs and results
+*.tsv
+*.csv
+*.txt
+*.json
+*.out
+*.log
+*.tre
+*.nwk
+*.pdf
+*.png
+*.jpg
+
+# Directories with results/data
+results/
+data/
+output/
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*~
+.*.swp
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.python-version
+.env
+venv/
+env/
+
+# R
+.Rhistory
+.RData
+.Rproj.user/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+
+# System files
+Thumbs.db
+Desktop.ini
+
+# HyPhy specific
+*.BF
+*.cache

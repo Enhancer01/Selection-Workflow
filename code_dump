@@ -1,0 +1,70 @@
+#!/bin/bash
+for f in *fa; do grep ">" "$f" | sed 's/>//g' > "${f%%fa}txt"; done
+for f in *txt; do nw_prune rounded_new_ellsm-timetree.nwk -v -f "$f" > "${f%%txt}tree2"; done
+
+
+
+#My reuseable one-line-go-to codes
+for f in *macseNT.fasta; do java -jar ~/software/macse_v2.07.jar -prog exportAlignment -align "$f" -codonForInternalStop NNN -codonForInternalFS —-- -charForRemainingFS --– -codonForFinalStop --- -out_NT "${f%%_macseNT.fasta}_refineNT.fasta" -out_AA "${f%%_macseNT.fasta}_refineAA.fasta" -gc_def 2; done
+for f in *fasta; do perl ~/software/fastagap/fastagap.pl -PA 50 "$f" > "${f%%.fasta}"_50fasgap.fa; done
+parallel -j 50 'base={.};  perl ~/software/fastagap/fastagap.pl -PA 50 "${base}.fasta-gb" > "${base}_fastgap.fa"' ::: *.fasta-gb >> fastgap.log 2>&1 &
+
+for f in *fa; do Gblocks "$f" -t=c -b3=9 -b4=6 -b5=h ; done >> gblock.log
+parallel -j 20 'base={.}; Gblocks "${base}.fasta" -t=c -b3=9 -b4=6 -b5=h' ::: *.fasta >> gbloc.log 2>&1 &
+
+for f in *rootree; do pxtrt -t "$f" -f "${f%%.rootree}.fastatxt" -o "${f%%.rootree}.nwk"; done
+ for f in *fasta; do grep ">" "$f" | sed 's/>//g' > "${f%%fatsa}txt"; done
+
+nohup cat list | while read file; do seqkit grep -f bats.txt "$file" > bats_"$file" ; done
+parallel -j 20 'base=$(basename {} .fasta); seqkit grep -f control_list.txt {} > cont_${base}.fa' ::: *.fasta
+
+
+nohup python3 TRACCER.py --time=10 --cpu=20 --gtrees=traccer_gene_trees.txt --mastertree=species_tree_traccer.nwk --hastrai
+t=Heterocephalus_glaber,Myotis_brandtii,Myotis_lucifugus,Myotis_myotis,Nannospalax_galili,Pteropus_giganteus,Rhinolophus_ferrumequinum,Homo_sapiens,Eptesicus_fuscus --outname=mytraccer --outgroup=Loxodonta_afr
+icana > traccer2.log 2>&1 &
+
+for f in *fa-gb; do seqkit grep -v -r -p "Monodelphis_domestica|Cavia_porcellus|Ornithorhynchus_anatinus" "$f" > "${f%%fa-gb}_30taxa.fa"; done
+parallel -j 20 'base=$(basename {} .fa-gb);seqkit grep -v -r -p "Orcinus_orca|Balaena_mysticetus|Loxodonta_africana|Pteropus_vampyrus|Fukomys_damarensis" "${base}.fa-gb" > "${base}_rmLbtaxa.fa"' ::: *.fa-gb
+ cat list | while read f; do trimal -in "$f" -out "${f%%.fasta}_trim.fa" -automated1; done >> trimal.log 2>&1 &
+
+ cat ref_tree.nwk | sed -E 's/:[0-9\.]+//g' | sed "s/'[0-9]*'//g" > constraint_tree.nwk
+
+sed 's/p/PROTEIN, part/g' prot-partitions.txt | sed 's/_traccer.*_trim//g' > prot-partitions2.txt
+python3 ~/software/AMAS/amas/AMAS.py concat -i *.fa-gb -f fasta -d aa -p prot-partitions.txt -t All-concat.fasta
+
+ python3 ~/software/AMAS/amas/AMAS.py concat -i *.fa-gb -f fasta -d aa -p prot-partitions.txt -t All-concat.fasta
+python3 ~/software/AMAS/amas/AMAS.py concat -i *_NT_AL_noFS_NT_fastgap.fas -f fasta -y nexus -d dna  -p codon-partitions.txt -t All-concat.fasta
+
+Ornithorhynchus_anatinus
+Monodelphis_domestica
+
+grep -c ">" *fastgap.fa | awk -F":" '$2<19 {print $0}' | less -N
+ awk 'NR > 1 && $7 < 0.01' mytraccer.TRACCER.txt | head
+
+parallel -j 20 "base={.}; awk 'BEGIN{RS=\">\"; ORS=\"\"} NR>1 { header=substr(\$0,1,index(\$0,\"\\n\")-1); seq=substr(\$0,index(\$0,\"\\n\")+1); gsub(\"\\n\", \"\", seq); if (length(seq) % 3 != 0) print \">\"header\"\\n\"; }' \"${base}.fasta\" > \"${base}.txt\"" ::: *.fasta >> notCodon.log 2>&1 &
+
+iqtree2 -s All-concat.fasta -st CODON -p codon-partitions.txt -o Monodelphis_domestica -m MFP -mset GY -merit BIC -rclusterf 0.8 -rcluster-max 100 -B 1000 -alrt 1000 -nt AUTO > iqspctree3.log 2>&1
+
+
+awk 'NR==FNR {genes[$1]; next} $2 in genes' Anage_uniq_gene_symbol.txt orthmam_anAge.txt
+
+
+Directory to the previous run of TRACCER : ~/Part_one/Fastagap_removed/RERConvergeTree/The30taxa/Traccer
+
+scp otunde@10.7.0.6:~/pyMol-pdb/mouse_Atrip_wt_pdb.png .
+
+
+
+for f in *txt; do nw_prune hyphyTree_with_bhw_noNode.nwk -v -f "$f" > "${f%%txt}nwk"; done
+
+
+
+RUNNING JOBS IN BATCHES AND PARALLEL
+parallel -j 5 'hyphy absrel --alignment {} --tree {.}.tree --output {.}.json' ::: *.fa
+ls *.fa | xargs -n 1 -P 5 -I {} hyphy absrel --alignment {} --tree {}.tree --output {}.json
+
+
+
+
+ awk 'NR==FNR {sym[$1]=$2; next} {print $0 "\t" sym[$1]}' Age-related-geneID.txt Bmal_all_relax_pvalues_from_json.txt > Bmal_with_symbols.txt
+ awk 'BEGIN {print "OrthoMam\tp-values\tgene_symbols"} {print}' Bmal_with_symbols.txt > Bmal_with_symbols_with_header.txt
